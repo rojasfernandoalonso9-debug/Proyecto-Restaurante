@@ -1,0 +1,22 @@
+# Java / Maven
+target/
+**/target/
+*.class
+
+# Node / Vite
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# Local environment and IDE files
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+*.iml
+
+# Operating system
+.DS_Store
+Thumbs.db

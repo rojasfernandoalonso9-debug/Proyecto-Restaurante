@@ -1,0 +1,4 @@
+package com.restaurant.management.repository;
+import com.restaurant.management.entity.Category;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface CategoryRepository extends JpaRepository<Category, Long> { }

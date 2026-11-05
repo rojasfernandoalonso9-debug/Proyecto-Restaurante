@@ -1,0 +1,19 @@
+import { useEffect, useState } from 'react'
+import { UserPlus } from 'lucide-react'
+import { api, endpoints } from '../services/api.js'
+import { CreateButton, ErrorNotice, LoadingState, Modal, PageTitle } from '../components/UI.jsx'
+import { StatusBadge } from '../components/StatusBadge.jsx'
+
+export function UsersPage() {
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [modal, setModal] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [form, setForm] = useState({ fullName: '', username: '', email: '', password: '', role: 'MESERO' })
+  function refresh() { setLoading(true); endpoints.users().then(({ data }) => { setUsers(data); setError('') }).catch((e) => setError(e.message)).finally(() => setLoading(false)) }
+  useEffect(refresh, [])
+  async function create(e) { e.preventDefault(); try { await api.post('/users', form); setModal(false); setForm({ fullName: '', username: '', email: '', password: '', role: 'MESERO' }); refresh() } catch (err) { setFormError(err.message) } }
+  async function toggle(user) { const active = !user.active; try { await api.patch(`/users/${user.id}/active`, { active }); refresh() } catch (e) { setError(e.message) } }
+  return <><PageTitle eyebrow="PERSONAS Y PERMISOS" title="Equipo" subtitle="Administra accesos según las responsabilidades del restaurante." actions={<CreateButton onClick={() => { setError(''); setFormError(''); setModal(true) }}>Agregar usuario</CreateButton>} /><ErrorNotice message={error} onRetry={refresh} />{loading ? <LoadingState /> : <section className="panel list-panel"><div className="list-toolbar"><div><h3>Usuarios del sistema</h3><span>{users.length} cuentas</span></div></div><div className="table-scroll"><table className="data-table"><thead><tr><th>PERSONA</th><th>USUARIO</th><th>CORREO</th><th>ROL</th><th>ESTADO</th><th>ACCESO</th></tr></thead><tbody>{users.map((user) => <tr key={user.id}><td><div className="user-row"><div className="avatar avatar-table">{user.fullName.slice(0, 1)}</div><strong>{user.fullName}</strong></div></td><td>{user.username}</td><td>{user.email}</td><td><span className="role-chip">{user.role.toLowerCase()}</span></td><td><StatusBadge status={user.active ? 'AVAILABLE' : 'INACTIVE'} /></td><td><button className={`button button-small ${user.active ? 'button-quiet' : 'button-success'}`} onClick={() => toggle(user)}>{user.active ? 'Desactivar' : 'Activar'}</button></td></tr>)}</tbody></table></div></section>}{modal && <Modal title="Agregar usuario" description="La contraseña se guardará cifrada con BCrypt." onClose={() => setModal(false)}><form className="form-stack" onSubmit={create}><label>Nombre completo<input required maxLength="120" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} /></label><div className="form-row"><label>Usuario<input required maxLength="50" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></label><label>Rol<select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="ADMINISTRADOR">Administrador</option><option value="MESERO">Mesero</option><option value="COCINA">Cocina</option></select></label></div><label>Correo<input type="email" required maxLength="160" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label><label>Contraseña<input type="password" minLength="8" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>{formError && <p className="inline-error">{formError}</p>}<div className="modal-actions"><button type="button" className="button button-quiet" onClick={() => setModal(false)}>Cancelar</button><button className="button button-primary"><UserPlus size={15} /> Crear usuario</button></div></form></Modal>}</>
+}
